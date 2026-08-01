@@ -1,0 +1,19 @@
+{
+  "name": "package.json",
+  "version": "1.0.0",
+  "description": "This is for the backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FierceOverlord/Task-Management-App.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FierceOverlord/Task-Management-App/issues"
+  },
+  "homepage": "https://github.com/FierceOverlord/Task-Management-App#readme"
+}
