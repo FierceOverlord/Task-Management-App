@@ -1,10 +1,11 @@
 {
-  "name": "package.json",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "This is for the backend",
+  "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "start"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,18 @@
   "bugs": {
     "url": "https://github.com/FierceOverlord/Task-Management-App/issues"
   },
-  "homepage": "https://github.com/FierceOverlord/Task-Management-App#readme"
+  "homepage": "https://github.com/FierceOverlord/Task-Management-App#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.6"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.5.0",
+    "mongoose": "^9.9.1",
+    "mongoose-aggregate-paginate-v2": "^1.1.4"
+  }
 }
