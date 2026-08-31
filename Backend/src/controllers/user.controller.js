@@ -7,7 +7,7 @@ import mongoose from "mongoose"
 import { destroyFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js"
 
 const generateAccessAndRefreshTokens = async(userId) => {
-    console.log("enter token generation for: ", userId)
+    console.log("Enter token generation for: ", userId)
     try{
         const user = await User.findById(userId);
 
@@ -29,16 +29,16 @@ const generateAccessAndRefreshTokens = async(userId) => {
 
 const registerUser = asyncHandler(async(req, res) => {
 
-    const {fullname, email, password} = req.body;
+    const {fullname, email, username, password} = req.body;
 
     if(
-        [fullname, email, password].some((field) => field.trim() === "")
+        [fullname, username, email, password].some((field) => field.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required.")
     }
 
     const existedUser = await User.findOne({
-        $or: [{fullname}, {email}],
+        $or: [{username}, {email}],
     });
 
     if (existedUser) {
@@ -50,10 +50,10 @@ const registerUser = asyncHandler(async(req, res) => {
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     const user = await User.create({
+        username: username.toLowerCase(),
         fullname,
         email,
         password,
-        avatar: avatar.url
     })
 
     const createdUser = await User.findById(user._id).select(
@@ -78,14 +78,14 @@ const loginUser = asyncHandler(async(req, res) => {
   // Access and Refresh Token
   // send cookie
 
-  const {email, password} = req.body;
+  const {email, username, password} = req.body;
 
-  if (!email) {
+  if (!(username || email)) {
     throw new ApiError(400, "Email is required")
   }
 
   const user = await User.findOne({
-    $or: {email},
+    $or: [{username},{email}],
   });
 
   if (!user) {
@@ -127,9 +127,83 @@ const loginUser = asyncHandler(async(req, res) => {
 });
 
 
+const logoutUser = asyncHandler(async(req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: { refreshToken: 1},
+        },
+        {
+            new: true,
+        }
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    };
+
+    return res
+        .statu(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User Logged Out"))
+})
+
+
+const changeCurrentPassword = asyncHandler(async(req, res) => {
+    const {oldPassword, newPassword} = req.body;
+
+    const user = await User.findById(req.user._id)
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid Password")
+    }
+
+    user.password = newPassword
+
+    await user.save({validateBeforeSave: false})
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password Changed Successfully."))
+})
+
+const getCurrentUser = asyncHandler(async(req, res) => {
+    return res
+        .status(200)
+        .json(new ApiResponse(200, req.user, "User fetched successfully."))
+})
+
+
+const updateAccountDetails = asyncHandler(async(req, res) => {
+    const {email, username} = req.body
+
+    if (!(email || username)) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {fullname, email},
+        },
+        { new : true }
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Account detials updated successfully."))
+})
 
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails
 };
